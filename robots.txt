@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zirize.github.io/scream-audio-monitoring/sitemap.xml
