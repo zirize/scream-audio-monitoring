@@ -36,6 +36,7 @@
             margin: 0 auto;
             padding: 24px 20px;
             background: #f1f5f9;
+            overflow-x: hidden;
         }
         header {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
@@ -46,7 +47,7 @@
             margin-bottom: 32px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.18);
         }
-        header h1 { margin: 0 0 10px; font-size: 2.4em; letter-spacing: -0.5px; }
+        header h1 { margin: 0 0 10px; font-size: 2.4em; letter-spacing: -0.5px; word-break: break-word; }
         header p  { margin: 0; color: #94a3b8; font-size: 1.05em; }
         .badge {
             display: inline-block;
@@ -65,6 +66,8 @@
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.07);
             margin-bottom: 28px;
+            /* prevent children from breaking out */
+            overflow: hidden;
         }
         h2 {
             color: #0f172a;
@@ -73,12 +76,14 @@
             padding-bottom: 8px;
             margin-top: 48px;
             margin-bottom: 20px;
+            word-break: break-word;
         }
         h2:first-child { margin-top: 0; }
         h3 {
             color: #1e40af;
             font-size: 1.15em;
             margin: 32px 0 14px;
+            word-break: break-word;
         }
         .diagram {
             background: #0d1117;
@@ -86,13 +91,21 @@
             padding: 22px 26px;
             border-radius: 8px;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 0.82em;
+            font-size: 0.78em;
             white-space: pre;
             overflow-x: auto;
+            overflow-y: hidden;
             margin: 20px 0;
             border: 1px solid #21262d;
             line-height: 1.5;
+            max-width: 100%;
+            /* webkit scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #1e293b;
         }
+        .diagram::-webkit-scrollbar { height: 6px; }
+        .diagram::-webkit-scrollbar-track { background: #1e293b; border-radius: 3px; }
+        .diagram::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         .network-info {
             display: flex;
             gap: 16px;
@@ -101,14 +114,14 @@
         }
         .net-card {
             flex: 1;
-            min-width: 180px;
+            min-width: 140px;
             background: #eff6ff;
             border: 1px solid #bfdbfe;
             border-radius: 8px;
             padding: 14px 18px;
         }
         .net-card .label { font-size: 0.78em; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
-        .net-card .value { font-size: 1.05em; font-weight: 700; color: #1d4ed8; font-family: monospace; }
+        .net-card .value { font-size: 1.05em; font-weight: 700; color: #1d4ed8; font-family: monospace; word-break: break-all; }
         .asset-container {
             display: flex;
             flex-wrap: wrap;
@@ -118,7 +131,8 @@
         }
         .asset-box {
             flex: 1;
-            min-width: 300px;
+            min-width: 260px;
+            max-width: 100%;
             text-align: center;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -131,21 +145,34 @@
             height: auto;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: block;
+            margin: 0 auto;
         }
         .asset-box small { display: block; margin-top: 8px; color: #94a3b8; font-size: 0.82em; }
-        ol.steps { padding-left: 0; list-style: none; counter-reset: step; }
+        ol.steps { padding-left: 0; list-style: none; counter-reset: step; margin: 0; }
         ol.steps li {
             counter-increment: step;
             display: flex;
             align-items: flex-start;
             margin-bottom: 16px;
             gap: 14px;
+            /* critical: prevent flex children from overflowing */
+            min-width: 0;
+        }
+        ol.steps li > div,
+        ol.steps li > span,
+        ol.steps li > p {
+            min-width: 0;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            flex: 1;
         }
         ol.steps li::before {
             content: counter(step);
             background: #3b82f6;
             color: #fff;
             min-width: 28px;
+            width: 28px;
             height: 28px;
             border-radius: 50%;
             display: flex;
@@ -157,6 +184,8 @@
             margin-top: 2px;
         }
         .warning li::before { background: #f59e0b; }
+        /* fix: step list items that contain text nodes + pre blocks */
+        ol.steps li { flex-wrap: nowrap; }
         code {
             background: #f1f5f9;
             border: 1px solid #e2e8f0;
@@ -165,6 +194,14 @@
             font-family: Consolas, 'Cascadia Code', monospace;
             font-size: 0.88em;
             color: #be185d;
+            word-break: break-all;
+        }
+        pre {
+            margin: 10px 0;
+            overflow-x: auto;
+            max-width: 100%;
+            /* prevent pre from escaping flex/grid parent */
+            min-width: 0;
         }
         pre code {
             display: block;
@@ -176,11 +213,18 @@
             overflow-x: auto;
             font-size: 0.85em;
             line-height: 1.6;
-            margin: 10px 0;
+            margin: 0;
+            word-break: normal;
+            white-space: pre;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #1e293b;
         }
+        pre code::-webkit-scrollbar { height: 6px; }
+        pre code::-webkit-scrollbar-track { background: #1e293b; border-radius: 3px; }
+        pre code::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         .os-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px;
             margin: 20px 0;
         }
@@ -188,26 +232,43 @@
             border-radius: 8px;
             padding: 18px;
             border: 1px solid;
+            min-width: 0;
+            overflow-wrap: break-word;
         }
         .os-card.windows { background: #eff6ff; border-color: #bfdbfe; }
         .os-card.linux   { background: #f0fdf4; border-color: #bbf7d0; }
         .os-card h4 { margin: 0 0 8px; font-size: 1em; }
         .os-card.windows h4 { color: #1d4ed8; }
         .os-card.linux h4   { color: #15803d; }
+        /* table: wrap in scrollable div to prevent overflow */
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 16px 0;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        .table-wrap::-webkit-scrollbar { height: 6px; }
+        .table-wrap::-webkit-scrollbar-track { background: #f1f5f9; }
+        .table-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 16px 0;
             font-size: 0.9em;
+            min-width: 480px;
         }
         th {
             background: #f1f5f9;
             text-align: left;
             padding: 10px 14px;
-            border: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
             font-weight: 600;
+            white-space: nowrap;
         }
-        td { padding: 9px 14px; border: 1px solid #e2e8f0; vertical-align: top; }
+        td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
         tr:nth-child(even) td { background: #f8fafc; }
         .callout {
             background: #fffbeb;
@@ -216,6 +277,7 @@
             border-radius: 0 6px 6px 0;
             margin: 16px 0;
             font-size: 0.92em;
+            overflow-wrap: break-word;
         }
         footer {
             text-align: center;
@@ -225,6 +287,28 @@
             color: #94a3b8;
         }
         a { color: #2563eb; }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            body { padding: 16px 14px; }
+            header { padding: 32px 20px; border-radius: 10px; }
+            header h1 { font-size: 1.6em; }
+            header p  { font-size: 0.95em; }
+            .container { padding: 22px 18px; border-radius: 10px; }
+            h2 { font-size: 1.3em; margin-top: 36px; }
+            h3 { font-size: 1.05em; }
+            .diagram { font-size: 0.7em; padding: 14px 16px; }
+            .network-info { gap: 10px; }
+            .net-card { min-width: 120px; padding: 10px 14px; }
+            .asset-box { min-width: 100%; }
+            .os-grid { grid-template-columns: 1fr; }
+            table { min-width: 360px; font-size: 0.82em; }
+            pre code { font-size: 0.8em; }
+        }
+        @media (max-width: 400px) {
+            header h1 { font-size: 1.35em; }
+            .diagram { font-size: 0.62em; }
+        }
     </style>
 </head>
 <body>
@@ -316,21 +400,21 @@
 
     <h3>Windows 10</h3>
     <ol class="steps">
-        <li>Download the ZIP (signed builds for x64, x86, arm64) from the <a href="https://github.com/duncanthrax/scream/releases" target="_blank">GitHub releases page</a>.</li>
-        <li>If Secure Boot is enabled, disable it in BIOS first (cross-signed kernel drivers require it to be off).</li>
-        <li>Extract the ZIP and run the <code>installer</code> batch file as <strong>Administrator</strong>.</li>
-        <li>Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</li>
+        <li><div>Download the ZIP (signed builds for x64, x86, arm64) from the <a href="https://github.com/duncanthrax/scream/releases" target="_blank">GitHub releases page</a>.</div></li>
+        <li><div>If Secure Boot is enabled, disable it in BIOS first (cross-signed kernel drivers require it to be off).</div></li>
+        <li><div>Extract the ZIP and run the <code>installer</code> batch file as <strong>Administrator</strong>.</div></li>
+        <li><div>Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</div></li>
     </ol>
 
     <h3>Windows 11</h3>
     <div class="callout">⚠️ The installer batch file uses <code>devcon</code>, which is not compatible with Windows 11. Use the <code>pnputil</code> method below instead.</div>
     <ol class="steps warning">
-        <li>Ensure Secure Boot is <strong>disabled</strong>.</li>
-        <li>Open an Administrator command prompt and enable Test Mode:<br><pre><code>bcdedit /set testsigning on</code></pre>Reboot and confirm "Test Mode" appears on the desktop wallpaper.</li>
-        <li>Navigate to the driver folder and install:<br><pre><code>cd &lt;scream folder&gt;\Install\driver\x64
-pnputil /add-driver .\Scream.inf /install</code></pre></li>
-        <li>Disable Test Mode and restart:<br><pre><code>bcdedit /set testsigning off</code></pre></li>
-        <li>Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</li>
+        <li><div>Ensure Secure Boot is <strong>disabled</strong>.</div></li>
+        <li><div>Open an Administrator command prompt and enable Test Mode:<pre><code>bcdedit /set testsigning on</code></pre>Reboot and confirm "Test Mode" appears on the desktop wallpaper.</div></li>
+        <li><div>Navigate to the driver folder and install:<pre><code>cd &lt;scream folder&gt;\Install\driver\x64
+pnputil /add-driver .\Scream.inf /install</code></pre></div></li>
+        <li><div>Disable Test Mode and restart:<pre><code>bcdedit /set testsigning off</code></pre></div></li>
+        <li><div>Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</div></li>
     </ol>
 
     <!-- ── Step 2: Linux ── -->
@@ -356,24 +440,25 @@ sudo pacman -S pipewire cmake gcc</code></pre>
 
     <h3>Build &amp; Install</h3>
     <ol class="steps">
-        <li>Clone and build:
+        <li><div>Clone and build:
 <pre><code>git clone https://github.com/zirize/pipewire-scream.git
 cd pipewire-scream
 cmake -B build && cmake --build build
 sudo cmake --install build</code></pre>
             Module is installed to <code>/usr/lib/pipewire-0.3/</code> (or <code>/usr/lib/x86_64-linux-gnu/pipewire-0.3/</code>).
-        </li>
-        <li>Configure auto-load on PipeWire startup:
+        </div></li>
+        <li><div>Configure auto-load on PipeWire startup:
 <pre><code>mkdir -p ~/.config/pipewire/pipewire.conf.d
 cp scream-sender.conf.example ~/.config/pipewire/pipewire.conf.d/scream-sender.conf</code></pre>
             Optionally edit the file to change IP (unicast), port, or sample rate.
-        </li>
-        <li>Apply changes by restarting PipeWire:
+        </div></li>
+        <li><div>Apply changes by restarting PipeWire:
 <pre><code>systemctl --user restart pipewire</code></pre>
-        </li>
+        </div></li>
     </ol>
 
     <h3>PipeWire Module Configuration Parameters</h3>
+    <div class="table-wrap">
     <table>
         <tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
         <tr><td><code>sink.name</code></td><td>string</td><td>Scream</td><td>Name of the virtual sink</td></tr>
@@ -384,6 +469,7 @@ cp scream-sender.conf.example ~/.config/pipewire/pipewire.conf.d/scream-sender.c
         <tr><td><code>format</code></td><td>string</td><td>S16LE</td><td>Audio format (S16LE, S24LE, S32LE)</td></tr>
         <tr><td><code>multicast.ttl</code></td><td>int</td><td>1</td><td>Multicast TTL (1–255)</td></tr>
     </table>
+    </div>
 
     <!-- ── Step 3: CLI ── -->
     <h2>⌨️ Step 3 — CLI Audio Playback (<code>zirize/screamplay</code>)</h2>
@@ -391,19 +477,19 @@ cp scream-sender.conf.example ~/.config/pipewire/pipewire.conf.d/scream-sender.c
 
     <h3>Dependencies &amp; Build</h3>
     <ol class="steps">
-        <li>Install dependencies:
+        <li><div>Install dependencies:
 <pre><code># Ubuntu / Debian
 sudo apt install libsndfile1-dev libsamplerate0-dev</code></pre>
-        </li>
-        <li>Clone and build:
+        </div></li>
+        <li><div>Clone and build:
 <pre><code>git clone https://github.com/zirize/screamplay.git
 cd screamplay && make</code></pre>
-        </li>
-        <li>Play an audio file:
+        </div></li>
+        <li><div>Play an audio file:
 <pre><code>./screamplay alert.wav
 ./screamplay notification.mp3</code></pre>
             Supports WAV, FLAC, OGG, AIFF, MP3 (via <code>libsndfile</code>). Non-standard sample rates are automatically resampled to <strong>48 kHz</strong> via <code>libsamplerate</code>.
-        </li>
+        </div></li>
     </ol>
 
     <!-- ── Step 4: Receivers ── -->
@@ -426,6 +512,7 @@ cd screamplay && make</code></pre>
     </div>
 
     <h3>Receiver Troubleshooting</h3>
+    <div class="table-wrap">
     <table>
         <tr><th>Issue</th><th>Check</th></tr>
         <tr><td>No audio received</td><td>Verify firewall allows UDP 4010; confirm multicast/IGMP on network</td></tr>
@@ -433,6 +520,7 @@ cd screamplay && make</code></pre>
         <tr><td>Packet inspection</td><td><code>sudo tcpdump -i any udp port 4010</code></td></tr>
         <tr><td>High bit rate warning</td><td>Use 48 kHz / 16-bit for 5.1+ channels; avoid 24/32-bit in multichannel</td></tr>
     </table>
+    </div>
 
 </div><!-- end .container -->
 
