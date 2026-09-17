@@ -1,5 +1,7 @@
 # 🎧 Scream Audio Monitoring Project
 
+📄 Project page: **[Integrated Audio Monitoring System — Scream Ecosystem](https://zirize.github.io/scream-audio-monitoring/)** · More projects: **[zirize.github.io](https://zirize.github.io/)**
+
 This project focuses on building an **Integrated Audio Monitoring System** that aggregates audio alerts and system sounds from multiple devices (Windows, Linux, and Embedded) over a local network (LAN) to a central monitoring station.
 
 ## 🚀 Overview
