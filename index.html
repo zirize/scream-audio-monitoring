@@ -215,6 +215,21 @@ cd screamplay && make</code></pre>
         </div>
     </div>
 
+    <!-- ── Advanced Setup: Linux Relay ── -->
+    <h2>🎛️ Advanced Setup: Central Audio Relay & Mixing</h2>
+    <p>By default, the Scream multicast protocol does not properly support multiple simultaneous audio sources on the same network (streams will collide and cause severe audio glitches). If you need to monitor multiple PCs or VMs simultaneously, you can use a Linux host as a central mixing relay.</p>
+
+    <div class="alert info">
+        <strong>Why use a Relay? (A-4 Topology)</strong> This approach centralizes the audio mixing workload on the Linux host. Each sender communicates directly with the relay. It is especially useful for mobile receivers like <strong>ScreamDroid</strong>, which only need to listen to one clean, consolidated Multicast stream instead of maintaining multiple UDP sockets and draining the battery.
+    </div>
+
+    <h3>How It Works</h3>
+    <ol class="steps">
+        <li><div><strong>Senders (Peers/VMs):</strong> Each Windows PC or VM is configured to send its audio via <strong>Unicast</strong> to a specific, unique port on the Linux Relay (e.g., PC 1 to port 4011, PC 2 to 4012).</div></li>
+        <li><div><strong>Linux Relay (Mixer):</strong> The Linux host runs multiple instances of the Scream Unix Receiver (one for each port). These receivers output audio into a single, shared PulseAudio or PipeWire virtual sink, effectively mixing the sounds.</div></li>
+        <li><div><strong>Broadcaster:</strong> The Linux host uses <code>pipewire-scream</code> to capture this mixed sink and broadcasts the final, unified stream via <strong>Multicast</strong> (port 4010) to all your receivers.</div></li>
+    </ol>
+
     <h3>Troubleshooting</h3>
     <table>
         <tr><th>Issue</th><th>Check</th></tr>
