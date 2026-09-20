@@ -242,6 +242,8 @@ cd screamplay && make</code></pre>
         <strong>Why use a Relay? (A-4 Topology)</strong> This approach centralizes the audio mixing workload on the Linux host. Each sender communicates directly with the relay. It is especially useful for mobile receivers like <strong>ScreamDroid</strong>, which only need to listen to one clean, consolidated Multicast stream instead of maintaining multiple UDP sockets and draining the battery.
     </div>
 
+    <p>For a complete, step-by-step tutorial on configuring the Linux Relay (including routing with qpwgraph and setting up Unicast configurations), check out the <strong><a href="https://zirize.github.io/pipewire-scream/#advanced-audio-relay-mixing" target="_blank">Detailed Relay Setup Guide in the pipewire-scream documentation</a></strong>.</p>
+
     <h3>How It Works</h3>
     <ol class="steps">
         <li><div><strong>Senders (Peers/VMs):</strong> Each Windows PC or VM is configured to send its audio via <strong>Unicast</strong> to a specific, unique port on the Linux Relay (e.g., PC 1 to port 4011, PC 2 to 4012).</div></li>
