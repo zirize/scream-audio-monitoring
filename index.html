@@ -109,23 +109,28 @@
     <h2>🪟 Component 1 — Windows Sender (<code>duncanthrax/scream</code>)</h2>
     <p>Provides a virtual Windows sound card driver that routes all system audio over UDP.</p>
 
-    <div class="alert warning">
-        <strong>Important for Windows 10 / 11:</strong> Modern Windows enforces Strict Driver Signature requirements. To install the Scream driver without disabling Secure Boot, you <strong>must</strong> add a specific registry key allowing cross-signed drivers before installation.
-    </div>
-
-    <h3>Installation & Registry Setup</h3>
+    <h3>Driver Installation</h3>
+    <p>Installation itself does not require registry manipulation; you can simply use Windows Test Mode as shown below.</p>
     <ol class="steps">
-        <li><div><strong>Enable Cross-Signed Drivers (Registry Fix):</strong> Open an Administrator PowerShell or Command Prompt and run:
-<pre><code>reg add "HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy" /v "UpgradedSystem" /t REG_DWORD /d 1 /f</code></pre>
-        Then, <strong>Reboot your PC</strong>.
+        <li><div>Ensure Secure Boot is <strong>disabled</strong> in your BIOS.</div></li>
+        <li><div>Open an Administrator command prompt and enable Test Mode:
+<pre><code>bcdedit /set testsigning on</code></pre>
+            Reboot and confirm "Test Mode" appears on the desktop wallpaper.
         </div></li>
-        <li><div><strong>Install the Driver:</strong> Extract the release zip and navigate to the <code>Install\driverd</code> directory, then run:
-<pre><code>pnputil /add-driver .\Scream.inf /install</code></pre></div></li>
-        <li><div><strong>Set Default Device:</strong> Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</div></li>
+        <li><div>Navigate to the driver folder and install:
+<pre><code>cd &lt;scream folder&gt;\Install\driver\x64
+pnputil /add-driver .\Scream.inf /install</code></pre></div></li>
+        <li><div>Disable Test Mode and restart:
+<pre><code>bcdedit /set testsigning off</code></pre></div></li>
+        <li><div>Open <em>Sound Settings</em> and set <strong>Scream</strong> as the default playback device.</div></li>
     </ol>
 
-    <h3>Advanced Windows Registry Tweaks</h3>
-    <p>You can further optimize the Windows sender by tweaking the registry under <code>Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Scream\Options</code>.</p>
+    <div class="alert warning">
+        <strong>Crucial for Windows 10/11 Operation:</strong> Even if the installation succeeds, the driver <strong>will not operate correctly</strong> on modern Windows 10/11 systems without specific configuration in the Registry. You must set these values for the driver to actually function.
+    </div>
+
+    <h3>Required Registry Configuration</h3>
+    <p>You <strong>must</strong> configure the driver's settings in the registry under <code>Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Scream\Options</code> (you will likely need to create the <code>Options</code> key). <strong>A reboot is required after changing these values.</strong></p>
     
     <div class="os-grid">
         <div class="os-card">
