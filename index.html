@@ -89,6 +89,12 @@
         
         footer { text-align: center; margin-top: 64px; padding-top: 32px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 0.9em; }
         footer a { color: #64748b; }
+        .toc { background: #f1f5f9; padding: 20px 24px; border-radius: 8px; margin-bottom: 32px; border-left: 4px solid #3b82f6; }
+        .toc h3 { margin-top: 0; color: #1e293b; font-size: 1.2em; margin-bottom: 16px; }
+        .toc ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .toc li a { color: #334155; text-decoration: none; font-weight: 500; display: block; padding: 8px 12px; background: #ffffff; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .toc li a:hover { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; transform: translateX(2px); text-decoration: none; }
+
     </style>
 </head>
 <body>
@@ -105,8 +111,21 @@
     
     <img src="scream_infographic.png" alt="Scream Architecture" class="hero-img">
 
+    <div class="toc">
+        <h3>Quick Navigation</h3>
+        <ul>
+            <li><a href="#component-1">🪟 Component 1 — Windows Sender</a></li>
+            <li><a href="#component-2">🐧 Component 2 — Linux PipeWire Sender</a></li>
+            <li><a href="#component-3">⌨️ Component 3 — CLI Audio Playback</a></li>
+            <li><a href="#component-4">📱 Component 4 — Android Receiver (ScreamDroid)</a></li>
+            <li><a href="#component-5">📡 Component 5 — Other Receivers Setup</a></li>
+            <li><a href="#advanced-setup">🎛️ Advanced Setup: Central Audio Relay</a></li>
+        </ul>
+    </div>
+
+
     <!-- ── Step 1: Windows ── -->
-    <h2>🪟 Component 1 — Windows Sender (<code>duncanthrax/scream</code>)</h2>
+    <h2 id="component-1">🪟 Component 1 — Windows Sender (<code>duncanthrax/scream</code>)</h2>
     <p>Provides a virtual Windows sound card driver that routes all system audio over UDP.</p>
 
     <h3>Driver Installation</h3>
@@ -145,7 +164,7 @@ pnputil /add-driver .\Scream.inf /install</code></pre></div></li>
     </div>
 
     <!-- ── Step 2: Linux ── -->
-    <h2>🐧 Component 2 — Linux PipeWire Sender (<code>zirize/pipewire-scream</code>)</h2>
+    <h2 id="component-2">🐧 Component 2 — Linux PipeWire Sender (<code>zirize/pipewire-scream</code>)</h2>
     <p>Creates a virtual audio sink in PipeWire. Audio routed to this sink is transmitted via the Scream protocol.</p>
 
     <h3>Build &amp; Install</h3>
@@ -165,7 +184,7 @@ systemctl --user restart pipewire</code></pre>
     </ol>
 
     <!-- ── Step 3: CLI ── -->
-    <h2>⌨️ Component 3 — CLI Audio Playback (<code>zirize/screamplay</code>)</h2>
+    <h2 id="component-3">⌨️ Component 3 — CLI Audio Playback (<code>zirize/screamplay</code>)</h2>
     <p>Streams audio files directly onto the Scream network without needing a virtual sound card. Ideal for automation and alerting scripts.</p>
 
     <ol class="steps">
@@ -181,7 +200,7 @@ cd screamplay && make</code></pre>
     </ol>
 
     <!-- ── Step 4: Android Receiver ── -->
-    <h2>📱 Component 4 — Android Receiver (<code>zirize/screamdroid</code>)</h2>
+    <h2 id="component-4">📱 Component 4 — Android Receiver (<code>zirize/screamdroid</code>)</h2>
     <p>A dedicated Android receiver that plays PC audio through your phone over Wi-Fi. It is highly optimized for battery efficiency and daily usage.</p>
 
     <div class="alert info">
@@ -197,7 +216,7 @@ cd screamplay && make</code></pre>
     </ul>
 
     <!-- ── Step 5: Other Receivers ── -->
-    <h2>📡 Component 5 — Other Receivers Setup</h2>
+    <h2 id="component-5">📡 Component 5 — Other Receivers Setup</h2>
     <p>You can mix and match receivers. Multiple receivers can listen to the same multicast group (<code>239.255.77.77:4010</code>).</p>
 
     <div class="os-grid">
@@ -216,7 +235,7 @@ cd screamplay && make</code></pre>
     </div>
 
     <!-- ── Advanced Setup: Linux Relay ── -->
-    <h2>🎛️ Advanced Setup: Central Audio Relay & Mixing</h2>
+    <h2 id="advanced-setup">🎛️ Advanced Setup: Central Audio Relay & Mixing</h2>
     <p>By default, the Scream multicast protocol does not properly support multiple simultaneous audio sources on the same network (streams will collide and cause severe audio glitches). If you need to monitor multiple PCs or VMs simultaneously, you can use a Linux host as a central mixing relay.</p>
 
     <div class="alert info">
