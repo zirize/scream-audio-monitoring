@@ -93,6 +93,18 @@
         .toc h3 { margin-top: 0; color: #1e293b; font-size: 1.2em; margin-bottom: 16px; }
         .toc ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
         .toc li a { color: #334155; text-decoration: none; font-weight: 500; display: block; padding: 8px 12px; background: #ffffff; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        p code, li code, td code { overflow-wrap: anywhere; }
+        .os-card { min-width: 0; }
+        .diagram { font-size: 0.8em; line-height: 1.35; }
+        figure { margin: 32px 0; }
+        figcaption { text-align: center; color: #64748b; font-size: 0.9em; margin-top: -20px; }
+        .table-wrap { overflow-x: auto; }
+        @media (max-width: 600px) {
+            header { padding: 40px 20px; }
+            header h1 { font-size: 1.8em; }
+            .container { margin: 8px; padding: 24px 16px; }
+            .os-grid, .toc ul { grid-template-columns: 1fr; }
+        }
         .toc li a:hover { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; transform: translateX(2px); text-decoration: none; }
 
     </style>
@@ -114,18 +126,46 @@
     <div class="toc">
         <h3>Quick Navigation</h3>
         <ul>
+            <li><a href="#architecture">🗺️ Architecture &amp; Quick Start</a></li>
             <li><a href="#component-1">🪟 Component 1 — Windows Sender</a></li>
             <li><a href="#component-2">🐧 Component 2 — Linux PipeWire Sender</a></li>
             <li><a href="#component-3">⌨️ Component 3 — CLI Audio Playback</a></li>
             <li><a href="#component-4">📱 Component 4 — Android Receiver (ScreamDroid)</a></li>
             <li><a href="#component-5">📡 Component 5 — Other Receivers Setup</a></li>
             <li><a href="#advanced-setup">🎛️ Advanced Setup: Central Audio Relay</a></li>
+            <li><a href="#verify">🔍 Verifying the Stream &amp; Firewall</a></li>
+            <li><a href="#troubleshooting">🩺 Troubleshooting</a></li>
+            <li><a href="#protocol">📡 Protocol Reference</a></li>
         </ul>
     </div>
 
+    <h2 id="architecture">🗺️ Architecture &amp; Quick Start</h2>
+    <p>Every sender pushes 1157-byte UDP packets to the multicast group <code>239.255.77.77:4010</code>. Every receiver joined to that group plays the audio. There is no server and no handshake.</p>
+<pre class="diagram"><code> ┌──────────────┐   ┌──────────────────┐   ┌──────────────┐
+ │ Windows PC   │   │ Linux PC         │   │ Linux script │
+ │ Scream driver│   │ pipewire-scream  │   │ screamplay   │
+ └──────┬───────┘   └────────┬─────────┘   └──────┬───────┘
+        │   UDP multicast 239.255.77.77:4010      │
+        └──────────────┬─────┴────────────────────┘
+                       ▼
+       ┌───────────────┼────────────────┐
+       ▼               ▼                ▼
+  ScreamDroid     Unix receiver     ScreamReader
+   (Android)        (Linux)          (Windows)</code></pre>
+
+    <div class="alert warning">
+        <strong>One sender per group.</strong> Two senders on the same multicast group/port interleave their packets and the audio breaks up. To hear several machines at once, use the <a href="#advanced-setup">Central Audio Relay</a>.
+    </div>
+
+    <h3>Quick Start</h3>
+    <ol class="steps">
+        <li><div><strong>Pick a sender:</strong> <a href="#component-1">Windows driver</a> (don't skip the registry step), <a href="#component-2">PipeWire sink</a> on Linux, or <a href="#component-3">screamplay</a> for scripted alerts.</div></li>
+        <li><div><strong>Pick a receiver:</strong> <a href="#component-4">ScreamDroid</a> on Android, or one of the <a href="#component-5">desktop/embedded receivers</a>.</div></li>
+        <li><div><strong>Verify:</strong> if you hear nothing, <a href="#verify">check that packets reach the receiver</a> before changing anything else.</div></li>
+    </ol>
 
     <!-- ── Step 1: Windows ── -->
-    <h2 id="component-1">🪟 Component 1 — Windows Sender (<a href="https://github.com/duncanthrax/scream" target="_blank"><code>duncanthrax/scream</code></a>)</h2>
+    <h2 id="component-1">🪟 Component 1 — Windows Sender (<a href="https://github.com/duncanthrax/scream" target="_blank" rel="noopener"><code>duncanthrax/scream</code></a>)</h2>
     <p>Provides a virtual Windows sound card driver that routes all system audio over UDP.</p>
 
     <h3>Driver Installation</h3>
@@ -164,7 +204,7 @@ pnputil /add-driver .\Scream.inf /install</code></pre></div></li>
     </div>
 
     <!-- ── Step 2: Linux ── -->
-    <h2 id="component-2">🐧 Component 2 — Linux PipeWire Sender (<a href="https://github.com/zirize/pipewire-scream" target="_blank"><code>zirize/pipewire-scream</code></a>)</h2>
+    <h2 id="component-2">🐧 Component 2 — Linux PipeWire Sender (<a href="https://github.com/zirize/pipewire-scream" target="_blank" rel="noopener"><code>zirize/pipewire-scream</code></a>)</h2>
     <p>Creates a virtual audio sink in PipeWire. Audio routed to this sink is transmitted via the Scream protocol.</p>
 
     <h3>Build &amp; Install</h3>
@@ -181,10 +221,14 @@ sudo cmake --install build</code></pre>
 cp scream-sender.conf.example ~/.config/pipewire/pipewire.conf.d/scream-sender.conf
 systemctl --user restart pipewire</code></pre>
         </div></li>
+        <li><div>Confirm the sink exists, then make it the default output (or route individual apps to it with <code>pavucontrol</code> / <code>qpwgraph</code>):
+<pre><code>wpctl status            # the Scream sink should be listed under "Sinks"
+wpctl set-default &lt;ID&gt;  # ID taken from the list above</code></pre>
+        </div></li>
     </ol>
 
     <!-- ── Step 3: CLI ── -->
-    <h2 id="component-3">⌨️ Component 3 — CLI Audio Playback (<a href="https://github.com/zirize/screamplay" target="_blank"><code>zirize/screamplay</code></a>)</h2>
+    <h2 id="component-3">⌨️ Component 3 — CLI Audio Playback (<a href="https://github.com/zirize/screamplay" target="_blank" rel="noopener"><code>zirize/screamplay</code></a>)</h2>
     <p>Streams audio files directly onto the Scream network without needing a virtual sound card. Ideal for automation and alerting scripts.</p>
 
     <ol class="steps">
@@ -197,10 +241,13 @@ cd screamplay && make</code></pre>
 <pre><code>./screamplay alert.wav</code></pre>
             Automatically resamples to 48 kHz. Supports WAV, FLAC, OGG, AIFF, and MP3.
         </div></li>
+        <li><div>Hook it into monitoring. For example, play an alarm when a host stops answering ping:
+<pre><code>ping -c 3 -W 2 192.168.0.50 &gt;/dev/null || ./screamplay alarm.wav</code></pre>
+        </div></li>
     </ol>
 
     <!-- ── Step 4: Android Receiver ── -->
-    <h2 id="component-4">📱 Component 4 — Android Receiver (<a href="https://github.com/zirize/screamdroid" target="_blank"><code>zirize/screamdroid</code></a>)</h2>
+    <h2 id="component-4">📱 Component 4 — Android Receiver (<a href="https://github.com/zirize/screamdroid" target="_blank" rel="noopener"><code>zirize/screamdroid</code></a>)</h2>
     <p>A dedicated Android receiver that plays PC audio through your phone over Wi-Fi. It is highly optimized for battery efficiency and daily usage.</p>
 
     <div class="alert info">
@@ -212,7 +259,7 @@ cd screamplay && make</code></pre>
         <li><strong>Automatic Call Muting:</strong> Detects active incoming/outgoing calls (via Audio Focus, without requiring invasive Phone state permissions) and gracefully mutes the network stream.</li>
         <li><strong>Foreground Service:</strong> Reliable background playback even when the screen is locked or the app is dismissed.</li>
         <li><strong>Dynamic Buffer Tuning:</strong> Lowers latency on fast networks and scales up buffering gracefully if the connection jitters.</li>
-        <li><strong>Installation:</strong> Download the APK directly from <a href="https://github.com/zirize/screamdroid/releases" target="_blank">GitHub Releases</a>.</li>
+        <li><strong>Installation:</strong> Download the APK directly from <a href="https://github.com/zirize/screamdroid/releases" target="_blank" rel="noopener">GitHub Releases</a>.</li>
     </ul>
 
     <!-- ── Step 5: Other Receivers ── -->
@@ -226,11 +273,15 @@ cd screamplay && make</code></pre>
         </div>
         <div class="os-card">
             <h4>🐧 Linux — Unix Receiver</h4>
-            <p>Located in <code>Receivers/unix</code> of the main Scream repo. Interfaces with PulseAudio, JACK, or ALSA. Simply build with CMake.</p>
+            <p>Located in <code>Receivers/unix</code> of the main Scream repo. Interfaces with PulseAudio, JACK, or ALSA.</p>
+<pre><code>cd scream/Receivers/unix
+cmake -B build &amp;&amp; cmake --build build
+./build/scream -i eth0       # multicast
+./build/scream -u -p 4011    # unicast</code></pre>
         </div>
         <div class="os-card">
             <h4>🔌 Embedded / Hardware</h4>
-            <p>For ethernet-attached active speakers, you can use third-party receivers for <a href="https://github.com/mincequi/cornrow" target="_blank">cornrow</a>, ESP32, or STM32F429.</p>
+            <p>For ethernet-attached active speakers, you can use third-party receivers for <a href="https://github.com/mincequi/cornrow" target="_blank" rel="noopener">cornrow</a>, ESP32, or STM32F429.</p>
         </div>
     </div>
 
@@ -242,7 +293,7 @@ cd screamplay && make</code></pre>
         <strong>Why use a Relay? (A-4 Topology)</strong> This approach centralizes the audio mixing workload on the Linux host. Each sender communicates directly with the relay. It is especially useful for mobile receivers like <strong>ScreamDroid</strong>, which only need to listen to one clean, consolidated Multicast stream instead of maintaining multiple UDP sockets and draining the battery.
     </div>
 
-    <p>For a complete, step-by-step tutorial on configuring the Linux Relay (including routing with qpwgraph and setting up Unicast configurations), check out the <strong><a href="https://zirize.github.io/pipewire-scream/#advanced-audio-relay-mixing" target="_blank">Detailed Relay Setup Guide in the pipewire-scream documentation</a></strong>.</p>
+    <p>For a complete, step-by-step tutorial on configuring the Linux Relay (including routing with qpwgraph and setting up Unicast configurations), check out the <strong><a href="https://zirize.github.io/pipewire-scream/#advanced-audio-relay-mixing" target="_blank" rel="noopener">Detailed Relay Setup Guide in the pipewire-scream documentation</a></strong>.</p>
 
     <h3>How It Works</h3>
     <ol class="steps">
@@ -251,23 +302,73 @@ cd screamplay && make</code></pre>
         <li><div><strong>Broadcaster:</strong> The Linux host uses <code>pipewire-scream</code> to capture this mixed sink and broadcasts the final, unified stream via <strong>Multicast</strong> (port 4010) to all your receivers.</div></li>
     </ol>
 
-    <h3>Troubleshooting</h3>
+    <!-- ── Verify ── -->
+    <h2 id="verify">🔍 Verifying the Stream &amp; Firewall</h2>
+    <p>Most "no audio" problems are network problems. First check whether packets reach the receiver host:</p>
+<pre><code>sudo tcpdump -n -i any udp port 4010
+# expected: a steady stream of lines ending in "UDP, length 1157"</code></pre>
+    <p>If nothing shows up, open the port on the receiver (and on the relay, if you use one):</p>
+    <div class="os-grid">
+        <div class="os-card">
+            <h4>🐧 Linux</h4>
+<pre><code>sudo ufw allow 4010/udp
+# or (firewalld)
+sudo firewall-cmd --permanent --add-port=4010/udp
+sudo firewall-cmd --reload</code></pre>
+        </div>
+        <div class="os-card">
+            <h4>🪟 Windows (admin)</h4>
+<pre><code>netsh advfirewall firewall add rule ^
+  name="Scream" dir=in action=allow ^
+  protocol=UDP localport=4010</code></pre>
+        </div>
+    </div>
+    <p>If packets appear on a wired host but not over Wi‑Fi, the access point is probably filtering or rate-limiting multicast. Switch that sender to unicast.</p>
+
+    <!-- ── Troubleshooting ── -->
+    <h2 id="troubleshooting">🩺 Troubleshooting</h2>
+    <div class="table-wrap">
     <table>
         <tr><th>Issue</th><th>Check</th></tr>
-        <tr><td>No audio received</td><td>Verify firewall allows UDP 4010. Confirm multicast/IGMP is enabled on your router. Or use Unicast mode (Windows Registry or Linux Config).</td></tr>
-        <tr><td>Stuttering or skips</td><td>Try increasing the SilenceThreshold registry key on Windows, or use a wired connection.</td></tr>
+        <tr><td>No audio received</td><td>Run the <a href="#verify">tcpdump check</a>. Open UDP 4010 in the firewall. Confirm multicast/IGMP is allowed on the router/switch. Otherwise use unicast (Windows registry or the Linux config).</td></tr>
+        <tr><td>Windows driver installed but silent</td><td>The <code>Options</code> registry key is required on Windows 10/11. Set the values and <strong>reboot</strong>. Make sure Scream is the default playback device.</td></tr>
+        <tr><td>Garbled / choppy mix of two sounds</td><td>Two senders are sharing one group/port. Give each its own port, or use the <a href="#advanced-setup">relay</a>.</td></tr>
+        <tr><td>Stuttering or skips</td><td>Use a wired connection where possible. Over Wi‑Fi, prefer unicast. Increase the receiver's buffer/latency.</td></tr>
+        <tr><td>Phone battery drains quickly</td><td>Set <code>SilenceThreshold</code> on Windows senders so nothing is sent during silence. Use a relay so the phone listens to only one stream.</td></tr>
         <tr><td>High bit rate warning</td><td>Use 48 kHz / 16-bit for 5.1+ channels. Avoid 24/32-bit in multichannel mode to stay under network limits.</td></tr>
     </table>
+    </div>
+
+    <!-- ── Protocol ── -->
+    <h2 id="protocol">📡 Protocol Reference</h2>
+    <p>The Scream wire format is simple, which makes it easy to write your own sender or receiver (e.g. on a microcontroller).</p>
+    <div class="table-wrap">
+    <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Transport</td><td>UDP. Multicast <code>239.255.77.77:4010</code> by default; unicast optional</td></tr>
+        <tr><td>Packet size</td><td>5-byte header + 1152 bytes of interleaved little-endian PCM = <strong>1157 bytes</strong></td></tr>
+        <tr><td>Byte 0</td><td>Sample rate. Bit 7: base rate (0 = 48 kHz, 1 = 44.1 kHz). Bits 0–6: multiplier (e.g. <code>0x01</code> = 48 kHz, <code>0x81</code> = 44.1 kHz)</td></tr>
+        <tr><td>Byte 1</td><td>Sample width in bits (16, 24, 32)</td></tr>
+        <tr><td>Byte 2</td><td>Number of channels</td></tr>
+        <tr><td>Bytes 3–4</td><td>Channel mask (<code>WAVEFORMATEXTENSIBLE</code> <code>dwChannelMask</code>, little-endian)</td></tr>
+    </table>
+    </div>
+    <p><strong>Bandwidth:</strong> 48 kHz × 16-bit × 2 ch ≈ 1.5 Mbps. 5.1 channels at 48 kHz/16-bit ≈ 4.6 Mbps.</p>
+
+    <figure>
+        <img src="scream_mindmap.png" alt="Mind map of the Scream protocol and its ecosystem" class="hero-img" loading="lazy">
+        <figcaption>Scream protocol mind map</figcaption>
+    </figure>
 
 </div>
 
 <footer>
     <p>Regenerated by <strong>Antigravity Agent</strong> &bull; September 2026</p>
     <p>Sources: 
-        <a href="https://github.com/duncanthrax/scream" target="_blank">duncanthrax/scream</a> &bull; 
-        <a href="https://github.com/zirize/pipewire-scream" target="_blank">zirize/pipewire-scream</a> &bull; 
-        <a href="https://github.com/zirize/screamplay" target="_blank">zirize/screamplay</a> &bull; 
-        <a href="https://github.com/zirize/screamdroid" target="_blank">zirize/screamdroid</a>
+        <a href="https://github.com/duncanthrax/scream" target="_blank" rel="noopener">duncanthrax/scream</a> &bull; 
+        <a href="https://github.com/zirize/pipewire-scream" target="_blank" rel="noopener">zirize/pipewire-scream</a> &bull; 
+        <a href="https://github.com/zirize/screamplay" target="_blank" rel="noopener">zirize/screamplay</a> &bull; 
+        <a href="https://github.com/zirize/screamdroid" target="_blank" rel="noopener">zirize/screamdroid</a>
     </p>
 </footer>
 
